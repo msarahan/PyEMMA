@@ -132,9 +132,41 @@ def extensions():
                   libraries=[lib_prefix+'theobald'],
                   library_dirs=[mdtraj.capi()['lib_dir']],
                   extra_compile_args=['-std=c99'])
+    lse_module = \
+        Extension('pyemma.thermo.pytram.util.impl_c.lse',
+                  sources=[
+                      'pyemma/thermo/pytram/util/impl_c/lse.pyx',
+                      'pyemma/thermo/pytram/util/impl_c/_lse.c'],
+                  include_dirs=[
+                      'pyemma/thermo/pytram/util/impl_c'],
+                  extra_compile_args=["-O3"]
+        )
+    dtram_module = \
+        Extension('pyemma.thermo.pytram.dtram.impl_c.dtram',
+                  sources=[
+                      'pyemma/thermo/pytram/dtram/impl_c/dtram.pyx',
+                      'pyemma/thermo/pytram/dtram/impl_c/_dtram.c',
+                      'pyemma/thermo/pytram/util/impl_c/_lse.c'],
+                  include_dirs=[
+                      'pyemma/thermo/pytram/dtram/impl_c'
+                      'pyemma/thermo/pytram/util/impl_c'],
+                  extra_compile_args=["-O3"]
+        )
+    xtram_module = \
+        Extension('pyemma.thermo.pytram.xtram.impl_c.xtram',
+                  sources=[
+                      'pyemma/thermo/pytram/xtram/impl_c/xtram.pyx',
+                      'pyemma/thermo/pytram/xtram/impl_c/_xtram.c'],
+                  include_dirs=[
+                      'pyemma/thermo/pytram/xtram/impl_c'],
+                  extra_compile_args=["-O3"]
+        )
 
     exts += [regspatial_module,
-             kmeans_module]
+             kmeans_module,
+             lse_module,
+             dtram_module,
+             xtram_module]
 
     if USE_CYTHON: # if we have cython available now, cythonize module
         exts = cythonize(exts)

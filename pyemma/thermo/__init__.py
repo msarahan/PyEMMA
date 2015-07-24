@@ -27,3 +27,6 @@ __author__ = 'noe'
 
 # import all api functions into module
 from .api import *
+
+from pyemma.thermo.models import StationaryModel, MultiThermModel
+from pyemma.thermo.estimators import DTRAM
