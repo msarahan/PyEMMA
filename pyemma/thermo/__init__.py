@@ -29,4 +29,4 @@ __author__ = 'noe'
 from .api import *
 
 from pyemma.thermo.models import StationaryModel, MultiThermModel
-from pyemma.thermo.estimators import DTRAM
+from pyemma.thermo.estimators import DTRAM, XTRAM

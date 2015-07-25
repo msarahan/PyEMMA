@@ -25,6 +25,9 @@
 
 __author__ = 'noe'
 
+import numpy as _np
+from pyemma.util import types as _types
+
 # ===================================
 # Data Loaders and Readers
 # ===================================
@@ -54,11 +57,23 @@ def umbrella_sampling_data(umbrella_trajs, centers, k, md_trajs = None, nbin=Non
     """
     pass
 
+# This corresponds to the source function in coordinates.api
+def multitemperature_data(trajs, temperatures):
+    r""" Wraps umbrella sampling data or a mix of umbrella sampling and and direct molecular dynamics
+
+    Parameters
+    ----------
+    trajs : x
+    temperatures : x
+
+    """
+    pass
+
 # ===================================
 # Estimators
 # ===================================
 
-def tram(dtrajs, ttrajs, btrajs, lag, maxiter=100000, ftol=1.0E-5):
+def tram(dtrajs, ttrajs, btrajs, lag, ground_state=0, maxiter=100000, ftol=1.0E-5):
     # TODO: describe ftol precisely
     """Transition-based reweighting analysis method
 
@@ -78,6 +93,11 @@ def tram(dtrajs, ttrajs, btrajs, lag, maxiter=100000, ftol=1.0E-5):
     btrajs : ndarray(T,K) of float, or list of ndarray(T_i,K) of float
         A single trajectory or a list of trajectories of bias energies. Each frame has K bias energies, evaluating
         the energy of the current configuration in each of the K thermodynamic states.
+    ground_state : int, optional, default=0
+        index of the thermodynamic ground or reference state. The statistics of
+        all thermodynamic states will be computed, but the state probabilities
+        of this state will be set to the default state probabilities in the
+        TRAM object that is returned
     maxiter : int, optional, default=100000
         The maximum number of TRAM iterations before the estimator exits unsuccessfully
     ftol : float, optional, default=1e-5
@@ -151,20 +171,59 @@ def tram(dtrajs, ttrajs, btrajs, lag, maxiter=100000, ftol=1.0E-5):
     temperature :math:`T_j`
 
     """
-    pass
+    # prepare trajectories
+    ttrajs = _types.ensure_dtraj_list(ttrajs)
+    dtrajs = _types.ensure_dtraj_list(dtrajs)
+    btrajs = _types.ensure_traj_list(btrajs)
+    ntrajs = len(ttrajs)
+    assert len(dtrajs) == ntrajs
+    assert len(btrajs) == ntrajs
+    nthermo = btrajs[0].shape[1]
+    X = []
+    for i in xrange(ntrajs):
+        assert len(dtrajs[i]) == len(ttrajs[i])
+        assert len(btrajs[i]) == len(ttrajs[i])
+        X.append(_np.hstack([ttrajs[i][:, None], dtrajs[i][:, None], btrajs[i]]))
+    # build XTRAM
+    from pyemma.thermo.estimators import XTRAM
+    xtram_estimator = XTRAM(lag=lag, ground_state=0, count_mode='sliding', maxiter=maxiter, maxerr=maxerr)
+    # run estimation
+    return xtram_estimator.estimate(X)
 
-def dtram(dtrajs, ttrajs, B, lag, maxiter=100000, ftol=1.0E-5):
+
+# TODO: B is transposed compared to the tram array. Should we transpose B for consistency?
+def dtram(ttrajs, dtrajs, B, lag, maxiter=100000, maxerr=1.0E-5):
     """Discrete transition-based reweighting analysis method
 
     Parameters
     ----------
-    B : ndarray(n,K)
-        for each discrete state i, b[i,j] is the bias probability at thermodynamic state j.
+    ttrajs : ndarray(T) of int, or list of ndarray(T_i) of int
+        A single discrete trajectory or a list of discrete trajectories. The integers are indexes in 1,...,K
+        enumerating the thermodynamic states the trajectory is in at any time.
+    dtrajs : ndarray(T) of int, or list of ndarray(T_i) of int
+        A single discrete trajectory or a list of discrete trajectories. The integers are indexes in 1,...,n
+        enumerating the n Markov states or the bins the trajectory is in at any time.
+    B : ndarray(K, n)
+        b[j,i] is the bias energy for each discrete state i at thermodynamic state j.
 
     See also
     --------
     tram
-        Besser ist das
 
     """
-    pass
+    # prepare trajectories
+    ttrajs = _types.ensure_dtraj_list(ttrajs)
+    dtrajs = _types.ensure_dtraj_list(dtrajs)
+    assert len(ttrajs) == len(dtrajs)
+    X = []
+    for i in xrange(len(ttrajs)):
+        ttraj = ttrajs[i]
+        dtraj = dtrajs[i]
+        assert len(ttraj) == len(dtraj)
+        X.append(_np.array([ttraj, dtraj]).T)
+    # build DTRAM
+    from pyemma.thermo.estimators import DTRAM
+    dtram_estimator = DTRAM(bias_energies_full=B, lag=lag, count_mode='sliding', maxiter=maxiter, maxerr=maxerr)
+    # run estimation
+    return dtram_estimator.estimate(X)
+
