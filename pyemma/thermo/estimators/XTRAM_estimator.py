@@ -46,6 +46,7 @@ class XTRAM(_Estimator, _MultiThermModel):
         self.dt_traj = dt_traj
         self.maxiter = maxiter
         self.maxerr = maxerr
+        print 'maxerr = ', maxerr
 
     def _estimate(self, trajs):
         """
@@ -137,9 +138,9 @@ class XTRAM(_Estimator, _MultiThermModel):
         print 'tarr shape: ', t_arr.shape
         print 'darr shape: ', d_arr.shape
 
-        xtram_estimator = pyemma_XTRAM(self.count_matrices, b_arr, t_arr, d_arr, N, target=self.ground_state)
-        xtram_estimator.sc_iteration(maxiter=self.maxiter, ftol=self.maxerr, verbose=False)
-        self.xtram_estimator = xtram_estimator
+        self.xtram_estimator = pyemma_XTRAM(self.count_matrices, b_arr, t_arr, d_arr, N, target=self.ground_state)
+        return  # interrupt here
+        self.xtram_estimator.sc_iteration(maxiter=self.maxiter, ftol=self.maxerr, verbose=False)
 
         # compute stationary distributions
         pi_all = xtram_estimator.pi_K_i

@@ -58,22 +58,67 @@ def umbrella_sampling_data(umbrella_trajs, centers, k, md_trajs = None, nbin=Non
     pass
 
 # This corresponds to the source function in coordinates.api
-def multitemperature_data(trajs, temperatures):
+def multitemperature_to_bias(etrajs, ttrajs, kTs):
     r""" Wraps umbrella sampling data or a mix of umbrella sampling and and direct molecular dynamics
+
+    The probability at the thermodynamic ground state is:
+
+    .. math:
+        \pi(x) = \mathrm{e}^{-\frac{U(x)}{kT_{0}}}
+
+    The probability at excited thermodynamic states is:
+
+    .. math:
+        \pi^I(x) = \mathrm{e}^{-\frac{U(x)}{kT_{I}}}
+                 = \mathrm{e}^{-\frac{U(x)}{kT_{0}}+\frac{U(x)}{kT_{0}}-\frac{U(x)}{kT_{I}}}
+                 = \mathrm{e}^{-\frac{U(x)}{kT_{0}}}\mathrm{e}^{-\left(\frac{U(x)}{kT_{I}}-\frac{U(x)}{kT_{0}}\right)}
+                 = \mathrm{e}^{-u(x)}\mathrm{e}^{-b_{I}(x)}
+
+    where we have defined the bias energies:
+
+    .. math:
+        b_{I}(x) = U(x)\left(\frac{1}{kT_{I}}-\frac{1}{kT_{0}}\right)
+
 
     Parameters
     ----------
-    trajs : x
-    temperatures : x
+    etrajs : ndarray or list of ndarray
+        energy trajectories
+    kTs : ndarray of float
+        kT values of the different temperatures
 
     """
-    pass
+    if isinstance(etrajs, _np.ndarray):
+        etrajs = [etrajs]
+        ttrajs = [ttrajs]
+    kTs = 1.0 * _types.ensure_ndarray(kTs, ndim=1, kind='numeric')  # make it a float array
+    ntrajs = len(etrajs)
+    btrajs = []
+    for i in range(ntrajs):
+        N = len(etrajs[i])
+        btraj = _np.ones((N, len(kTs)))
+        btraj *= 1.0/kTs
+        btraj -= (1.0/kTs[ttrajs[i]])[:, None]
+        btraj *= etrajs[i][:, None]
+        btrajs.append(btraj)
+
+    #tfacs = 1.0/kTs - 1.0/kTs[0]
+    #tfacs = 1.0/kTs
+    #btrajs = []
+    #for etraj in etrajs:
+    #    btraj = _np.ones((len(etraj), len(kTs)))
+    #    btraj *= etraj[:, None]
+    #    btraj *= tfacs
+    #    btrajs.append(btraj)
+    if len(btrajs) == 1:
+        btrajs = btrajs[0]
+    return btrajs
 
 # ===================================
 # Estimators
 # ===================================
 
-def tram(dtrajs, ttrajs, btrajs, lag, ground_state=0, maxiter=100000, ftol=1.0E-5):
+def tram(dtrajs, ttrajs, btrajs, lag, ground_state=0, maxiter=100000, maxerr=1.0E-5):
     # TODO: describe ftol precisely
     """Transition-based reweighting analysis method
 

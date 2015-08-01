@@ -110,7 +110,7 @@ class XTRAM(Estimator):
         """
         finc = 0.0
         f_old = np.zeros(self.f_K.shape[0])
-        self._b_i_IJ = np.zeros((self.n_markov_states, self.n_therm_states, self.n_therm_states), dtype=np.float64)
+        self.b_i_IJ = np.zeros((self.n_markov_states, self.n_therm_states, self.n_therm_states), dtype=np.float64)
         if verbose:
             print "# %25s %25s" % ("[Step]", "[rel. Increment]")
         for i in xrange(maxiter):
