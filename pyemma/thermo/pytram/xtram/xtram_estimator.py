@@ -328,6 +328,7 @@ class XTRAM(Estimator):
 
 
     def _init_f_K(self):
+        # TODO: to be replaced by tested low-level function
         """ Computes the initial guess of free energies via bar ratios
         """
         I_plus_one = np.zeros(self.n_therm_states)
