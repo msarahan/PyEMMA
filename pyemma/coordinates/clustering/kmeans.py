@@ -45,7 +45,7 @@ class KmeansClustering(AbstractClustering):
     r"""k-means clustering"""
 
     def __init__(self, n_clusters, max_iter=5, metric='euclidean',
-                 tolerance=1e-5, init_strategy='kmeans++', fixed_seed=False, oom_strategy='memmap'):
+                 tolerance=1e-5, init_strategy='kmeans++', fixed_seed=False, oom_strategy='memmap', seed=42):
         r"""Kmeans clustering
 
         Parameters
@@ -92,6 +92,7 @@ class KmeansClustering(AbstractClustering):
         self._oom_strategy = oom_strategy
         self._custom_param_progress_handling = True
         self._fixed_seed = fixed_seed
+        self._seed = seed
 
     def _param_init(self):
         self._prev_cost = 0
@@ -233,7 +234,7 @@ class KmeansClustering(AbstractClustering):
             elif last_chunk and self._init_strategy == 'kmeans++':
                 kmeans_clustering.set_callback(self.kmeanspp_center_assigned)
                 cc = kmeans_clustering.init_centers(self._in_memory_chunks,
-                                                    self.metric, self.n_clusters, not self._fixed_seed)
+                                                    self.metric, self.n_clusters, not self._fixed_seed, self._seed)
                 self._cluster_centers_iter = [c for c in cc]
 
     def _collect_data(self, X, first_chunk, stride):

@@ -259,7 +259,7 @@ error:
 }
 
 static PyObject* initCentersKMpp(PyObject *self, PyObject *args) {
-    int k, centers_found, first_center_index, i, j, n_trials, use_random_seed;
+    int k, centers_found, first_center_index, i, j, n_trials, use_random_seed, seed;
     int some_not_done;
     float d;
     float dist_sum;
@@ -293,10 +293,11 @@ static PyObject* initCentersKMpp(PyObject *self, PyObject *args) {
     next_center_candidates_potential = NULL;
     dist_sum = 0.0;
     use_random_seed = 1;
+    seed = 42;
 
 
     /* parse python input (np_data, metric, k) */
-    if (!PyArg_ParseTuple(args, "O!sii", &PyArray_Type, &np_data, &metric, &k, &use_random_seed)) {
+    if (!PyArg_ParseTuple(args, "O!siii", &PyArray_Type, &np_data, &metric, &k, &use_random_seed, &seed)) {
         goto error;
     }
 
@@ -310,7 +311,7 @@ static PyObject* initCentersKMpp(PyObject *self, PyObject *args) {
         #ifdef _KMEANS_INIT_RANDOM_SEED
         #undef _KMEANS_INIT_RANDOM_SEED
         #endif
-        srand(42);
+        srand(seed);
     }
 
     n_frames = np_data->dimensions[0];
@@ -532,7 +533,7 @@ static char CLUSTER_USAGE[] = "cluster(chunk, centers, mindist, metric)\n"\
 "----\n"\
 "This function uses the minRMSD implementation of mdtraj.";
 
-static char INIT_CENTERS_USAGE[] = "init_centers(data, metric, k)\n"\
+static char INIT_CENTERS_USAGE[] = "init_centers(data, metric, k, use_random_seed, seed)\n"\
 "Given the data, choose \"k\" cluster centers according to the kmeans++ initialization."\
 "\n"\
 "Parameters\n"\
@@ -545,6 +546,9 @@ static char INIT_CENTERS_USAGE[] = "init_centers(data, metric, k)\n"\
 "    (input) the number of cluster centers to be assigned for initialization."\
 "use_random_seed : bool\n"\
 "    (input) determines if a fixed seed should be used or a random one\n"\
+"seed : integer\n"\
+"    (input) optional, fixed seed, default=42\n"\
+
 "\n"\
 "Returns\n"\
 "-------\n"\
