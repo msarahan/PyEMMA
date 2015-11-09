@@ -38,5 +38,5 @@ build: false # Not a C# project, build stuff at the test step instead.
 
 test_script:
   # run testsuite and upload test results to AppVeyor; return exit code of testsuite
-  - %PYTHON%\\python -c "import os; print(os.environ['PATH'])"
+  - python -c "import os; print(os.environ['PATH'])"
   - conda build -q tools/conda-recipe
