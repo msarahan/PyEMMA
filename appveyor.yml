@@ -26,14 +26,17 @@ install:
   - conda config --set always_yes true 
   - conda config --add channels omnia 
   - conda install -q conda-build jinja2 
+  - conda update --all
 
   # use agg backend in matplotlib to avoid gui popup, which can not be closed.
   - echo %userprofile%
   - mkdir %userprofile%\\.matplotlib
+  - echo %PATH%
   - "echo backend: agg > %userprofile%\\.matplotlib\\matplotlibrc"
 
 build: false # Not a C# project, build stuff at the test step instead.
 
 test_script:
   # run testsuite and upload test results to AppVeyor; return exit code of testsuite
+  - %PYTHON% -c "import os; print(os.environ["PATH"])"
   - conda build -q tools/conda-recipe
